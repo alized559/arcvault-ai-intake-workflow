@@ -1,0 +1,207 @@
+[
+  {
+    "request_id": "REQ-001",
+    "source": "Email",
+    "received_at": "2026-03-13T09:15:00Z",
+    "customer_message": "Hi, I tried logging in this morning and keep getting a 403 error. My account is arcvault.io/user/jsmith. This started after your update last Tuesday.",
+    "normalized_text": "Customer cannot log in and receives a 403 error. Account path: arcvault.io/user/jsmith. Issue began after last Tuesday's product update.",
+    "classification": {
+      "category": "Bug Report",
+      "priority": "High",
+      "confidence": 0.96
+    },
+    "enrichment": {
+      "core_issue": "Customer login is failing with a 403 error after a recent product update.",
+      "relevant_identifiers": {
+        "account_path": "arcvault.io/user/jsmith",
+        "error_code": "403",
+        "reported_start": "this morning",
+        "change_reference": "after your update last Tuesday"
+      },
+      "urgency_signal": "User blocked from core login workflow."
+    },
+    "decision": {
+      "queue": "Engineering",
+      "escalated": false,
+      "escalation_reasons": []
+    },
+    "summary": "A customer reported that login is failing with a 403 error for account `arcvault.io/user/jsmith`. The issue likely relates to a recent product update and is routed to the Engineering queue for investigation.",
+    "processing_metadata": {
+      "workflow_version": "1.0.0",
+      "llm_mode": "mock",
+      "model": "placeholder-single-step-llm",
+      "processed_at": "2026-03-13T10:00:00Z"
+    }
+  },
+  {
+    "request_id": "REQ-002",
+    "source": "Web Form",
+    "received_at": "2026-03-13T09:18:00Z",
+    "customer_message": "We'd love to see a bulk export feature for our audit logs. We're a compliance-heavy org and this would save us hours every month.",
+    "normalized_text": "Customer requests a bulk export capability for audit logs to reduce manual compliance work.",
+    "classification": {
+      "category": "Feature Request",
+      "priority": "Low",
+      "confidence": 0.98
+    },
+    "enrichment": {
+      "core_issue": "Customer wants bulk export for audit logs to support recurring compliance workflows.",
+      "relevant_identifiers": {
+        "requested_capability": "bulk export",
+        "product_area": "audit logs",
+        "business_context": "compliance-heavy organization"
+      },
+      "urgency_signal": "Time-saving request with recurring operational value, but no active service disruption."
+    },
+    "decision": {
+      "queue": "Product",
+      "escalated": false,
+      "escalation_reasons": []
+    },
+    "summary": "A customer asked for bulk export support for audit logs to reduce recurring compliance effort. This is a clear feature request with high model confidence, so it is routed to the Product queue at low priority.",
+    "processing_metadata": {
+      "workflow_version": "1.0.0",
+      "llm_mode": "mock",
+      "model": "placeholder-single-step-llm",
+      "processed_at": "2026-03-13T10:00:00Z"
+    }
+  },
+  {
+    "request_id": "REQ-003",
+    "source": "Support Portal",
+    "received_at": "2026-03-13T09:22:00Z",
+    "customer_message": "Invoice #8821 shows a charge of $1,240 but our contract rate is $980/month. Can someone look into this?",
+    "normalized_text": "Customer reports invoice #8821 is billed at $1,240 instead of the contracted $980 monthly rate.",
+    "classification": {
+      "category": "Billing Issue",
+      "priority": "Medium",
+      "confidence": 0.99
+    },
+    "enrichment": {
+      "core_issue": "Customer believes invoice #8821 is overcharged relative to their contract rate.",
+      "relevant_identifiers": {
+        "invoice_number": "8821",
+        "billed_amount_usd": 1240,
+        "contract_rate_usd": 980,
+        "billing_difference_usd": 260
+      },
+      "urgency_signal": "Potential billing discrepancy with direct monetary impact."
+    },
+    "decision": {
+      "queue": "Billing",
+      "escalated": false,
+      "escalation_reasons": []
+    },
+    "summary": "A customer flagged invoice `#8821` as billed at `$1,240` instead of their `$980` contract rate. The discrepancy is material enough for medium-priority billing review, but it stays out of escalation because the overcharge is below the `$500` threshold.",
+    "processing_metadata": {
+      "workflow_version": "1.0.0",
+      "llm_mode": "mock",
+      "model": "placeholder-single-step-llm",
+      "processed_at": "2026-03-13T10:00:00Z"
+    }
+  },
+  {
+    "request_id": "REQ-004",
+    "source": "Email",
+    "received_at": "2026-03-13T09:27:00Z",
+    "customer_message": "I'm not sure if this is the right place to ask, but is there a way to set up SSO with Okta? We're evaluating switching our auth provider.",
+    "normalized_text": "Customer asks whether ArcVault supports SSO setup with Okta while evaluating an authentication provider change.",
+    "classification": {
+      "category": "Technical Question",
+      "priority": "Low",
+      "confidence": 0.95
+    },
+    "enrichment": {
+      "core_issue": "Customer is seeking guidance on whether ArcVault supports SSO integration with Okta.",
+      "relevant_identifiers": {
+        "identity_provider": "Okta",
+        "topic": "SSO setup",
+        "decision_context": "evaluating switching auth provider"
+      },
+      "urgency_signal": "Pre-sales or implementation guidance request without service impact."
+    },
+    "decision": {
+      "queue": "IT/Security",
+      "escalated": false,
+      "escalation_reasons": []
+    },
+    "summary": "A customer asked whether ArcVault can be configured for SSO with Okta as part of an auth-provider evaluation. This is routed to IT/Security as a low-priority technical question because there is no active outage or account issue.",
+    "processing_metadata": {
+      "workflow_version": "1.0.0",
+      "llm_mode": "mock",
+      "model": "placeholder-single-step-llm",
+      "processed_at": "2026-03-13T10:00:00Z"
+    }
+  },
+  {
+    "request_id": "REQ-005",
+    "source": "Web Form",
+    "received_at": "2026-03-13T09:31:00Z",
+    "customer_message": "Your dashboard stopped loading for us around 2pm EST. Checked our end — it's definitely on yours. Multiple users affected.",
+    "normalized_text": "Customer reports the dashboard stopped loading around 2pm EST and says multiple users are affected, with the issue likely on ArcVault's side.",
+    "classification": {
+      "category": "Incident/Outage",
+      "priority": "High",
+      "confidence": 0.99
+    },
+    "enrichment": {
+      "core_issue": "Customer reports a likely ArcVault-side dashboard outage affecting multiple users.",
+      "relevant_identifiers": {
+        "affected_product_area": "dashboard",
+        "reported_time": "around 2pm EST",
+        "affected_scope": "multiple users",
+        "suspected_ownership": "ArcVault"
+      },
+      "urgency_signal": "Multiple users impacted by a probable service outage."
+    },
+    "decision": {
+      "queue": "Escalation Queue",
+      "escalated": true,
+      "escalation_reasons": [
+        "Message indicates outage/down condition.",
+        "Multiple users affected."
+      ]
+    },
+    "summary": "A customer reported that the dashboard stopped loading around `2pm EST` and said multiple users are affected. Because the message strongly indicates an ArcVault-side outage, it is classified as a high-priority incident and sent directly to the Escalation Queue.",
+    "processing_metadata": {
+      "workflow_version": "1.0.0",
+      "llm_mode": "mock",
+      "model": "placeholder-single-step-llm",
+      "processed_at": "2026-03-13T10:00:00Z"
+    }
+  },
+  {
+    "request_id": "REQ-006",
+    "source": "Email",
+    "received_at": "2026-03-13T09:36:00Z",
+    "customer_message": "I'm having trouble accessing some parts of the system after the update.",
+    "normalized_text": "Customer reports vague access trouble affecting some parts of the system after a product update, without naming a specific feature, error, or affected scope.",
+    "classification": {
+      "category": "Technical Question",
+      "priority": "Medium",
+      "confidence": 0.55
+    },
+    "enrichment": {
+      "core_issue": "Customer reports partial system access issues after an update, but the message is too ambiguous to classify more precisely.",
+      "relevant_identifiers": {
+        "change_reference": "after the update",
+        "affected_scope": "some parts of the system"
+      },
+      "urgency_signal": "Possible post-release issue, but the impact and failure mode are unclear from the message."
+    },
+    "decision": {
+      "queue": "Escalation Queue",
+      "escalated": true,
+      "escalation_reasons": [
+        "Confidence below 0.70."
+      ]
+    },
+    "summary": "A customer reported trouble accessing some parts of the system after an update, but did not provide enough detail to determine whether this is a bug, outage, or setup issue. It is classified conservatively as a technical question with low confidence and escalated for human review.",
+    "processing_metadata": {
+      "workflow_version": "1.0.0",
+      "llm_mode": "mock",
+      "model": "placeholder-single-step-llm",
+      "processed_at": "2026-03-13T10:00:00Z"
+    }
+  }
+]

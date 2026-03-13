@@ -1,0 +1,198 @@
+{
+  "name": "ArcVault Intake Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "path": "arcvault-intake",
+        "httpMethod": "POST",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -920,
+        280
+      ],
+      "webhookId": "arcvault-intake"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      request_id: 'REQ-001',\n      source: 'Email',\n      received_at: '2026-03-13T09:15:00Z',\n      customer_message: 'Hi, I tried logging in this morning and keep getting a 403 error. My account is arcvault.io/user/jsmith. This started after your update last Tuesday.'\n    }\n  },\n  {\n    json: {\n      request_id: 'REQ-002',\n      source: 'Web Form',\n      received_at: '2026-03-13T09:18:00Z',\n      customer_message: \"We'd love to see a bulk export feature for our audit logs. We're a compliance-heavy org and this would save us hours every month.\"\n    }\n  },\n  {\n    json: {\n      request_id: 'REQ-003',\n      source: 'Support Portal',\n      received_at: '2026-03-13T09:22:00Z',\n      customer_message: 'Invoice #8821 shows a charge of $1,240 but our contract rate is $980/month. Can someone look into this?'\n    }\n  },\n  {\n    json: {\n      request_id: 'REQ-004',\n      source: 'Email',\n      received_at: '2026-03-13T09:27:00Z',\n      customer_message: \"I'm not sure if this is the right place to ask, but is there a way to set up SSO with Okta? We're evaluating switching our auth provider.\"\n    }\n  },\n  {\n    json: {\n      request_id: 'REQ-005',\n      source: 'Web Form',\n      received_at: '2026-03-13T09:31:00Z',\n      customer_message: 'Your dashboard stopped loading for us around 2pm EST. Checked our end — it\\'s definitely on yours. Multiple users affected.'\n    }\n  },\n  {\n    json: {\n      request_id: 'REQ-006',\n      source: 'Email',\n      received_at: '2026-03-13T09:36:00Z',\n      customer_message: \"I'm having trouble accessing some parts of the system after the update.\"\n    }\n  }\n];"
+      },
+      "id": "3",
+      "name": "Load Demo Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst requestId = body.request_id ?? `REQ-${Date.now()}`;\nconst source = body.source ?? 'Webhook';\nconst receivedAt = body.received_at ?? new Date().toISOString();\nconst customerMessage = body.customer_message ?? body.message ?? body.text ?? '';\n\nreturn [{\n  json: {\n    request_id: requestId,\n    source,\n    received_at: receivedAt,\n    customer_message: customerMessage,\n    normalized_source: source.toLowerCase().replace(/\\s+/g, '_')\n  }\n}];"
+      },
+      "id": "4",
+      "name": "Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -470,
+        170
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $json;\nconst systemPrompt = `You are an AI support triage assistant for ArcVault, a fictional B2B SaaS company. Read one inbound customer request and return strict JSON only. Classify into exactly one of: Bug Report, Feature Request, Billing Issue, Technical Question, Incident/Outage. Assign exactly one priority of Low, Medium, or High. Confidence must be a number from 0.00 to 1.00. Extract only identifiers clearly supported by the message. core_issue and urgency_signal must each be one sentence. summary must be 2 to 3 sentences. Omit unknown fields instead of fabricating them.`;\nconst userPrompt = `Request metadata:\\n- request_id: ${item.request_id}\\n- source: ${item.source}\\n- received_at: ${item.received_at}\\n\\nCustomer message:\\n${item.customer_message}`;\nreturn [{ json: { ...item, llm_prompt: { system: systemPrompt, user: userPrompt }, llm_mode: 'mock' } }];"
+      },
+      "id": "5",
+      "name": "Build LLM Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        170
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.customer_message;\nconst lower = text.toLowerCase();\n\nfunction result(payload) {\n  return [{ json: { ...$json, llm_result: payload } }];\n}\n\nif (lower.includes('403 error')) {\n  return result({\n    category: 'Bug Report',\n    priority: 'High',\n    confidence: 0.96,\n    core_issue: 'Customer login is failing with a 403 error after a recent product update.',\n    relevant_identifiers: {\n      account_path: 'arcvault.io/user/jsmith',\n      error_code: '403',\n      reported_start: 'this morning',\n      change_reference: 'after your update last Tuesday'\n    },\n    urgency_signal: 'User blocked from core login workflow.',\n    summary: 'A customer reported that login is failing with a 403 error for account arcvault.io/user/jsmith. The issue appears tied to a recent product update, so it should be reviewed by Engineering quickly.'\n  });\n}\n\nif (lower.includes('bulk export feature')) {\n  return result({\n    category: 'Feature Request',\n    priority: 'Low',\n    confidence: 0.98,\n    core_issue: 'Customer wants bulk export for audit logs to support recurring compliance workflows.',\n    relevant_identifiers: {\n      requested_capability: 'bulk export',\n      product_area: 'audit logs',\n      business_context: 'compliance-heavy organization'\n    },\n    urgency_signal: 'Time-saving request with recurring operational value, but no active service disruption.',\n    summary: 'A customer asked for bulk export support for audit logs to reduce recurring compliance effort. This is a clear feature request with high confidence and should be routed to Product.'\n  });\n}\n\nif (lower.includes('invoice #8821')) {\n  return result({\n    category: 'Billing Issue',\n    priority: 'Medium',\n    confidence: 0.99,\n    core_issue: 'Customer believes invoice #8821 is overcharged relative to their contract rate.',\n    relevant_identifiers: {\n      invoice_number: '8821',\n      billed_amount_usd: 1240,\n      contract_rate_usd: 980,\n      billing_difference_usd: 260\n    },\n    urgency_signal: 'Potential billing discrepancy with direct monetary impact.',\n    summary: 'A customer flagged invoice #8821 as billed at $1,240 instead of their $980 contract rate. The issue belongs with Billing for review and does not cross the escalation threshold.'\n  });\n}\n\nif (lower.includes('okta')) {\n  return result({\n    category: 'Technical Question',\n    priority: 'Low',\n    confidence: 0.95,\n    core_issue: 'Customer is seeking guidance on whether ArcVault supports SSO integration with Okta.',\n    relevant_identifiers: {\n      identity_provider: 'Okta',\n      topic: 'SSO setup',\n      decision_context: 'evaluating switching auth provider'\n    },\n    urgency_signal: 'Pre-sales or implementation guidance request without service impact.',\n    summary: 'A customer asked whether ArcVault can be configured for SSO with Okta as part of an auth-provider evaluation. This is a technical question and should be routed to IT/Security.'\n  });\n}\n\nif (lower.includes('dashboard stopped loading')) {\n  return result({\n    category: 'Incident/Outage',\n    priority: 'High',\n    confidence: 0.99,\n    core_issue: 'Customer reports a likely ArcVault-side dashboard outage affecting multiple users.',\n    relevant_identifiers: {\n      affected_product_area: 'dashboard',\n      reported_time: 'around 2pm EST',\n      affected_scope: 'multiple users',\n      suspected_ownership: 'ArcVault'\n    },\n    urgency_signal: 'Multiple users impacted by a probable service outage.',\n    summary: 'A customer reported that the dashboard stopped loading around 2pm EST and said multiple users are affected. This strongly suggests an ArcVault-side outage and should be escalated immediately.'\n  });\n}\n\nif (lower.includes('trouble accessing some parts of the system after the update')) {\n  return result({\n    category: 'Technical Question',\n    priority: 'Medium',\n    confidence: 0.55,\n    core_issue: 'Customer reports partial system access issues after an update, but the message is too ambiguous to classify more precisely.',\n    relevant_identifiers: {\n      change_reference: 'after the update',\n      affected_scope: 'some parts of the system'\n    },\n    urgency_signal: 'Possible post-release issue, but the impact and failure mode are unclear from the message.',\n    summary: 'A customer reported trouble accessing some parts of the system after an update, but did not provide enough detail to determine whether this is a bug, outage, or setup issue. It should be escalated for human review because the classification confidence is low.'\n  });\n}\n\nreturn result({\n  category: 'Technical Question',\n  priority: 'Medium',\n  confidence: 0.55,\n  core_issue: 'The request could not be confidently classified from the available message content.',\n  relevant_identifiers: {},\n  urgency_signal: 'Message is ambiguous and requires manual review.',\n  summary: 'The inbound request was too ambiguous for confident automated triage. It should be routed for human review.'\n});"
+      },
+      "id": "6",
+      "name": "Mock LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        170
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const categoryToQueue = {\n  'Bug Report': 'Engineering',\n  'Incident/Outage': 'Engineering',\n  'Feature Request': 'Product',\n  'Billing Issue': 'Billing',\n  'Technical Question': 'IT/Security'\n};\n\nconst llm = $json.llm_result;\nconst message = $json.customer_message.toLowerCase();\nconst reasons = [];\nlet queue = categoryToQueue[llm.category] ?? 'Escalation Queue';\n\nif (llm.confidence < 0.7) {\n  reasons.push('Confidence below 0.70.');\n}\nif (message.includes('outage') || message.includes('down') || message.includes('stopped loading')) {\n  reasons.push('Message indicates outage/down condition.');\n}\nif (message.includes('multiple users affected')) {\n  reasons.push('Multiple users affected.');\n}\nconst billingDifference = llm.relevant_identifiers?.billing_difference_usd;\nif (typeof billingDifference === 'number' && billingDifference > 500) {\n  reasons.push('Billing discrepancy exceeds $500.');\n}\n\nconst escalated = reasons.length > 0;\nif (escalated) {\n  queue = 'Escalation Queue';\n}\n\nreturn [{\n  json: {\n    ...$json,\n    routing_decision: {\n      queue,\n      escalated,\n      escalation_reasons: reasons\n    }\n  }\n}];"
+      },
+      "id": "7",
+      "name": "Evaluate Routing + Escalation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        170
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const llm = $json.llm_result;\nconst identifiers = llm.relevant_identifiers ?? {};\n\nlet normalizedText = $json.customer_message;\nif ($json.request_id === 'REQ-001') {\n  normalizedText = 'Customer cannot log in and receives a 403 error. Account path: arcvault.io/user/jsmith. Issue began after last Tuesday\\'s product update.';\n} else if ($json.request_id === 'REQ-002') {\n  normalizedText = 'Customer requests a bulk export capability for audit logs to reduce manual compliance work.';\n} else if ($json.request_id === 'REQ-003') {\n  normalizedText = 'Customer reports invoice #8821 is billed at $1,240 instead of the contracted $980 monthly rate.';\n} else if ($json.request_id === 'REQ-004') {\n  normalizedText = 'Customer asks whether ArcVault supports SSO setup with Okta while evaluating an authentication provider change.';\n} else if ($json.request_id === 'REQ-005') {\n  normalizedText = 'Customer reports the dashboard stopped loading around 2pm EST and says multiple users are affected, with the issue likely on ArcVault\\'s side.';\n} else if ($json.request_id === 'REQ-006') {\n  normalizedText = 'Customer reports vague access trouble affecting some parts of the system after a product update, without naming a specific feature, error, or affected scope.';\n}\n\nreturn [{\n  json: {\n    request_id: $json.request_id,\n    source: $json.source,\n    received_at: $json.received_at,\n    customer_message: $json.customer_message,\n    normalized_text: normalizedText,\n    classification: {\n      category: llm.category,\n      priority: llm.priority,\n      confidence: llm.confidence\n    },\n    enrichment: {\n      core_issue: llm.core_issue,\n      relevant_identifiers: identifiers,\n      urgency_signal: llm.urgency_signal\n    },\n    decision: $json.routing_decision,\n    summary: llm.summary,\n    processing_metadata: {\n      workflow_version: '1.0.0',\n      llm_mode: $json.llm_mode,\n      model: 'placeholder-single-step-llm',\n      processed_at: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "8",
+      "name": "Build Output Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        170
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load Demo Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Demo Requests": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Build LLM Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LLM Prompt": {
+      "main": [
+        [
+          {
+            "node": "Mock LLM Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Routing + Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Routing + Escalation": {
+      "main": [
+        [
+          {
+            "node": "Build Output Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "arcvault-intake-workflow-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "arcvault-intake-workflow",
+  "tags": []
+}
