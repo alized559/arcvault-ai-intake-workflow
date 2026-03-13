@@ -92,6 +92,7 @@ Escalation overrides the normal queue and routes to `Escalation Queue` when:
 2. Compare the six demo inputs in [data/sample_inputs.json](data/sample_inputs.json) with the six final records in [data/output_records.json](data/output_records.json).
 3. Read [docs/prompts.md](docs/prompts.md) for the exact prompt and strict JSON contract.
 4. Read [docs/architecture.md](docs/architecture.md) for rationale, reliability, and scale considerations.
+5. See the screenshots/ directory for execution outputs of each workflow stage.
 
 ## Running The Workflow In n8n
 1. Import [workflow/arcvault-intake-workflow.json](workflow/arcvault-intake-workflow.json) into n8n.
